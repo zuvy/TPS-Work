@@ -1,3 +1,4 @@
+-- Would rather not have had to use som many hard coded values.
 WITH STS AS (
 SELECT StudentTest.Test_date
   , TestScore.NAME TestScore_Name
