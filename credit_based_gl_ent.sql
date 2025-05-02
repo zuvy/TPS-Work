@@ -1,3 +1,4 @@
+-- This query ran 17 seconds until I put window functions in the cb_grade_levels CTE..
 WITH sg AS (
   SELECT StoredGrades.StudentID
   , StoredGrades.Grade_Level
