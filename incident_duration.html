@@ -1,0 +1,93 @@
+<script type="text/javascript" src="../../tps_custom/init.js"></script>
+<script type="text/javascript">
+  ;(function ($, tps_custom) {
+
+    function val_begin_date (begin_date, dates_array) {
+      if ($.inArray(begin_date, dates_array) !== -1) {
+      }
+      else {
+        alert("Begin date must be an in session day.");
+        $('#actionBeginDate').val('');
+      };
+    };
+
+    function val_end_date (end_date, dates_array) {
+      if ($.inArray(end_date, dates_array) !== -1) {
+      }
+      else {
+        alert("End date must be an in session day.");
+        $('#actionEndDate').val('');
+      };
+    };
+
+
+    $(function () {
+      var $begin_date = $('#actionBeginDate');
+      var $end_date = $('#actionEndDate');
+      var $actual_duration = $('#actionActualDuration');
+      var $action_duration = $('#actionDuration');
+      var $action_resolution = $('#actionResoDate');
+
+      var dates_array = []
+      function validator() {
+        var errors = [];
+        if ($begin_date.length !== 1) errors.push('Should be exactly one $begin_date');
+        if ($end_date.length !== 1) errors.push('Should be exactly one $end_date');
+        if ($actual_duration.length !== 1) errors.push('Should be exactly one $actual_duration');
+        if ($action_duration.length !== 1) errors.push('Should be exactly one $action_duration');
+        return errors;
+      }
+      ~[tlist_sql;
+          SELECT trunc(DistrictCalendarDay.DateValue)
+          FROM DistrictCalendarDay
+          JOIN DistrictCalendar On DistrictCalendarDay.DistrictCalendarID = DistrictCalendar.ID
+          WHERE DistrictCalendarDay.InSession = 1
+          AND DistrictCalendar.CalendarYear = SUBSTR(EXTRACT(YEAR FROM ADD_MONTHS(SYSDATE, -6)), -2) + 10
+          ORDER BY DistrictCalendarDay.DateValue
+        ;]
+      var calendar_day = new Date("~(DateValue)")
+      calendar_day = ("0" + (calendar_day.getMonth() + 1)).slice(-2) + "/" + ("0" + calendar_day.getDate()).slice(-2) + "/" + calendar_day.getFullYear();
+      dates_array.push(calendar_day);
+
+      [/tlist_sql]
+
+      if (tps_custom.load(validator, 'Loading duration calculation.')) {
+        $('#actionActualDuration').attr('readonly', true)
+
+        $(document).on('change', '#actionBeginDate', function() {
+            val_begin_date($begin_date.val(), dates_array);
+        });
+
+        $(document).on('change', '#actionEndDate', function() {
+            val_end_date($end_date.val(), dates_array);
+        });
+        $(document).on('change', '#actionBeginDate, #actionEndDate', function () {
+            if ($begin_date && $end_date) {
+              if (Date.parse($begin_date.val()) > Date.parse($end_date.val())) {
+                alert("Begin date cannot be later than the end date.");
+                $($end_date).val('');
+              } else {
+                begin_index = $.inArray($begin_date.val(), dates_array);
+                end_index = $.inArray($end_date.val(), dates_array);
+                if ($begin_date.val() && $end_date.val()) {
+                  var max_index = dates_array.indexOf(dates_array[dates_array.length - 1])
+                  var duration = (end_index - begin_index) < 0 ? (max_index - begin_index) : (end_index - begin_index) + 1;
+                  var resolution = dates_array[end_index + 1];
+                  $actual_duration.val(duration);
+                  $action_duration.val(duration);
+                  $action_resolution.val(resolution);
+
+                }
+              }
+            }
+        });
+
+        $('#update-action-button').hover(function () {
+          if (!($begin_date.val() && $end_date.val())) {
+            alert("Begin and End dates are both required");
+          }
+        });
+      }
+    });
+  })($j, window.tps_custom);
+</script>

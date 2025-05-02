@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html>
+<head>
+<!-- TODO remove META tag once nested forms are resolved from this page -->
+<title>~[text:psx.html.guardian.gradplanprogress.graduation_progress__powerschool_parent_access]</title>
+
+
+<link rel="stylesheet" type="text/css" href="/scripts/datatable.css"/>
+<link rel="stylesheet" type="text/css" href="/scripts/glowbutton.css"/>
+<link rel="stylesheet" type="text/css" href="/scripts/div_popup.css"/>
+<link rel="stylesheet" type="text/css" href="/scripts/selectorwidget.css"/>
+<link rel="stylesheet" type="text/css" href="/scripts/AcademicPlanner.css"/>
+
+~[get_js_texts:psx.js.scripts.commonscripts.]
+<script type="text/javascript" src="/scripts/commonscripts.js"></script>
+~[wc:get_js_texts_div_popup]
+<style>
+      .progress-indicator-complete {
+          float: left;
+          font-weight: bold;
+          text-align: center;
+          color: #0202f7;
+          background-color: #00FA00;
+          width: 100px;
+      }
+      .progress-indicator-incomplete {
+          float: left;
+          font-weight: bold;
+          text-align: center;
+          color: black;
+          background-color: red;
+          width: 100px;
+      }
+      img.legend-img {
+          width: 25px;
+          height: 25px;
+      }
+      .feedback-info {
+          margin-bottom: 0 !important;
+      }
+</style>
+<script type="text/javascript" src="/scripts/div_popup.js"></script>
+<link href="/images/css/screen.css" rel="stylesheet" media="screen">
+<link href="/images/css/print.css" rel="stylesheet" media="print">
+~[wc:guardian_header]
+
+<script>
+  ;(function ($, tps_custom) {
+    $(function () {
+      // capture non academic status values
+      var fafsa = "~([Students.U_StudentsUserFields]TPS_Grad_Fafsa)";
+      var cpr = "~([Students.U_StudentsUserFields]TPS_Grad_CPR)";
+      var pfl = "~([Students.U_StudentsUserFields]TPS_Grad_FLP)";
+      var icap_all = $('table#tps_custom-grad-requirements tr td:contains("The student has satisfactorily completed all ICAP requirements:")').next().text();
+      var cvcs = "~([Students.U_StudentsUserFields]TPS_GRAD_USCIVICS)";
+      var icap9 = "~([Students.U_StudentsUserFields]TPS_GRAD_ICAP9)";
+      var icap10 = "~([Students.U_StudentsUserFields]TPS_GRAD_ICAP10)";
+      var icap11 = "~([Students.U_StudentsUserFields]TPS_GRAD_ICAP11)";
+      var icap12 = "~([Students.U_StudentsUserFields]TPS_GRAD_ICAP12)";
+      var icap_wbl = "~([Students.U_StudentsUserFields]TPS_GRAD_ICAP_WBL)";
+      var core_math = "~([Students.U_StudentsUserFields]TPS_GRAD_COREMATH)";
+      var industry = "~([Students.U_StudentsUserFields]TPS_Grad_Industry)";
+      var $industry = $('table#graduation-info tr td:contains("The student has earned a Business and Industry Recognized Endorsement:")').closest('tr');
+      var $core_math = $('table#graduation-info tr td:contains("The student has met the 3rd core math requirement via CareerTech course:")').closest('tr');
+      // create an object that uses keys that can be used for html content
+      var grad_requirements = {
+        "FAFSA": fafsa,
+        "CPR": cpr,
+        "PFL": pfl,
+        "CIVICS": cvcs
+      };
+
+      var icap_requirements = {
+          "ICAP 9": icap9,
+          "ICAP 10": icap10,
+          "ICAP 11": icap11,
+          "ICAP 12": icap11,
+          "ICAP WBL": icap_wbl
+      };
+      // iterate through the object and display the results for an at a glance assesment.
+      $.each(icap_requirements, function(i, k) {
+          if (k.trim() === 'Yes') {
+              $('table#non-academic-requirements tr td:contains("ICAP Progress")').next().append('<div class="progress-indicator-complete">' + i + '</div>');
+          }
+          else {
+              $('table#non-academic-requirements tr td:contains("ICAP Progress")').next().append('<div class="progress-indicator-incomplete">' + i + '</div>');
+          }
+      });
+      $.each(grad_requirements, function(i, k) {
+          if (k.trim() == 'Yes' || k.trim() == 'Exempt' || k.trim() == 'Complete') {
+              $('table#non-academic-requirements tr td:contains("Non Academic Requirements Progress")').next().append('<div class="progress-indicator-complete">' + i + '</div>');
+          }
+          else {
+              $('table#non-academic-requirements tr td:contains("Non Academic Requirements Progress")').next().append('<div class="progress-indicator-incomplete">' + i + '</div>');
+          }
+      });
+
+      function validator() {
+        var errors = [];
+
+        if ($core_math.length !== 1) {
+          errors.push('should be exactly one core math element');
+        }
+
+        if ($industry.length !== 1) {
+          errors.push('should be exactly one industry element');
+        }
+
+        return errors;
+      }
+
+
+      if (tps_custom.load(validator, "Hiding core math and industry endorsement rows.")
+          && (core_math !== 'Yes' || industry !== 'Yes')) {
+        if ($core_math.val() !== 'Yes') {
+          $core_math.hide();
+        }
+        if (industry !== 'Yes') {
+          $industry.hide();
+        }
+      }
+    });
+
+  })($j, window.tps_custom);
+</script>
+
+<body data-ng-cloak
+		data-ng-controller="gradPlanProgressController"
+		data-require-path="components/gradplanner/gpprogress/index"
+		data-module-name="gradPlannerProgressModule">
+
+	<!-- start student content -->
+	~[SetPostValue:studentId=~(curstudid)]
+
+		<input id="studentid-field" type="hidden" data-ng-model="gradPlanProgressContext.studentId" value="~(curstudid)"/>
+		<input id="context-field" type="hidden" data-ng-model="gradPlanProgressContext.context" value="public"/>
+
+	    <h1>~[text:psx.html.admin_students_GraduationPlanner.GradPlanProgress.graduation_progress]: ~(studentname)</h1>
+		~[if#ismobile1.gpv.ismobile=1][else#ismobile1]
+		<div class="button-row">
+		~[if#pref.prefyearschool.ap_showChangePreps=1]
+        <span class="right">
+                <a href="/guardian/planselect.html?nav=~(gpv.nav;encodeurl)" class="button">~[text:psx.html.guardian.gradplanprogress.select_postsecondary_plans]</a>
+            </span>
+        [/if#pref]
+		~[if#legacyplan.student.has.legacy.plan]
+        <span class="right">
+                <a href="/guardian/planprogress.html?nav=~(gpv.nav;encodeurl)"
+                   id="viewLegacyPlanBtn" class="button">~[text:psx.html.guardian.gradplanprogress.view_legacy_plans]</a>
+        </span>
+		[/if#legacyplan]
+        </div>
+		[/if#ismobile1]
+
+	    <script>
+			var modAccess = ~[if.modaccess] true [else] false [/if];
+		</script>
+
+		<div class="box-round" data-ng-if="!gradPlanProgressContext.progressList || gradPlanProgressContext.progressList.length===0"/>
+			<p>{{messages.no_graduation_plans_were_found_for_the_student}}</p>
+		</div>
+		<!-- CUSTOM BELOW -->
+		    <style>
+              .alternating-rows tr:nth-child(even) {background: #eee}
+
+              *:disabled {
+                background-color: green;
+                color: red;
+                opacity: 1;
+              }
+            </style>
+            <table id="graduation-info" class="alternating-rows">
+              <colgroup>
+                <col width="50%">
+                <col width="50%">
+              </colgroup>
+
+              <tr bgcolor="#f6f6f6">
+                <td colspan="2" class="center">
+                  ~[text:psx.htmlc.guardian.graduation_progress_tps.graduation_progress_information]
+                </td>
+              </tr>
+              <tr>
+                <td class="bold">
+                  ~[text:psx.htmlc.guardian.graduation_progress_tps.diploma_path]
+                </td>
+                <td><!-- `[Students]OK_ACE_Core_Curriculum` is an alias for `S_OK_STU_X.CoreCurriculum` -->
+                  ~([Students]OK_ACE_Core_Curriculum)
+                </td>
+              </tr>
+              <!-- ~[tlist_sql;
+                Select gpn.Name
+                FROM GPStudentPlan gpsp
+                JOIN GPNode gpn ON gpn.GPVersionID = gpsp.GPVersionID
+                WHERE gpn.ParentID IS NULL
+                AND gpsp.SortOrder = 1
+                AND gpsp.StudentID = ~(curstudid)
+              ;] -->
+              <tr>
+                  <td class="bold">~[text:psx.htmlc.guardian.graduation_progress_tps.primary_graduation_plan]:</td><td>~(gpn.name)<br />
+                    ~[text:psx.htmlc.guardian.ctr.other_listed_plans_are_for_information_only]
+                  </td>
+              </tr>
+              <!-- [/tlist_sql] -->
+              <tr>
+                <td colspan="2">
+                  <div class="feedback-info bold">
+                    ~[text:psx.htmlc.guardian.ctr.cohort_the_expected_year_of_graduation_for_a_student_on_a_standa]
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                  <td class="bold">~[text:psx.htmlc.guardian.graduation_progress_tps.cohort_year] ~[text:psx.htmlc.guardian.ctr.ontime_graduate]</td>
+                  <td>~([Students]Sched_YearOfGraduation)</td>
+              </tr>
+              <tr>
+                <td colspan="2">
+                  <div class="feedback-info bold">
+                    ~[text:psx.htmlc.guardian.ctr.ccra_information] <a href="https://sde.ok.gov/college-and-career-readiness-assessments" target="_blank">~[text:psx.htmlc.guardian.graduation_progress_tps.ok_sde__ccra]</a>
+                  </div>
+                </td>
+              </tr>
+
+              <tr>
+                <td class="bold">
+                  ~[text:psx.htmlc.guardian.graduation_progress_tps.ccra]  ~[text:psx.htmlc.guardian.graduation_progress_tps.ela_math_us_history_and_science1]
+                </td>
+                <td>
+                  ~(decode;~([Students.U_StudentsUserFields]TPS_GRAD_CCRA);;Unset;Yes;Yes;No;No;Exempt;Exempt;Not Set)
+                  ~[text:psx.htmlc.guardian.graduation_progress_tps.beginning_cohort_2022]
+                </td>
+              </tr>
+              <!-- ~[tlist_sql;
+                Select gpn.Name
+                FROM GPStudentPlan gpsp
+                JOIN GPNode gpn ON gpn.GPVersionID = gpsp.GPVersionID
+                WHERE gpn.ParentID IS NULL
+                AND gpsp.SortOrder = 1
+                AND gpsp.StudentID = ~(curstudid)
+              ;] -->
+              <tr>
+                  <td class="bold">~[text:psx.htmlc.guardian.graduation_progress_tps.primary_graduation_plan]:</td><td>~(gpn.name)</td>
+              </tr>
+              <!-- [/tlist_sql] -->
+              <tr>
+                <td class="bold">
+                  ~[text:psx.htmlc.guardian.graduation_progress_tps.graduation_credit_requirements_met]:
+                </td>
+                <td>
+                  ~(decode;~([Students.U_StudentsUserFields]TPS_GRADUATION_PROGRESS);;Unset;Yes;Yes;No;No;Not Set)
+                </td>
+              </tr>
+              <tr>
+                <td colspan="2">
+                  <div class="feedback-info bold">
+                    ~[text:psx.htmlc.guardian.graduation_progress_tps.oklahoma_promise_is_a_scholarship_program_that_offers_qualified_1]
+                    ~[text:psx.htmlc.guardian.graduation_progress_tps.more_information_at1] <a href="https://okpromise.org/" target="_blank">~[text:psx.htmlc.guardian.graduation_progress_tps.oklahoma_promise]</a>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td class="bold">
+                  ~[text:psx.htmlc.guardian.graduation_progress_tps.ok_promise_registered1]
+                </td>
+                <td>
+                    <input type="checkbox" name="[Students.U_StudentsUserFields]TPS_Graduation_Progress_OHLA02" value="yes" disabled>
+                </td>
+              </tr>
+              <tr>
+                <td class="bold">
+                  ~[text:psx.htmlc.guardian.graduation_progress_tps.the_student_has_met_the_3rd_core_math_requirement_via_careertech1]
+                </td>
+                <td>
+                  ~(decode;~([Students.U_StudentsUserFields]TPS_GRAD_COREMATH);;Unset;Yes;Yes;Not Set)
+                </td>
+              </tr>
+              <tr>
+                <td class="bold">
+                  ~[text:psx.htmlc.guardian.graduation_progress_tps.the_student_has_earned_a_business_and_industry_recognized_endors1]
+                </td>
+                <td>
+                  ~(decode;~([Students.U_StudentsUserFields]TPS_Grad_Industry;sqlText);;-;~([Students.U_StudentsUserFields]TPS_Grad_Industry))
+                </td>
+              </tr>
+              <!-- ~[tlist_sql;
+                SELECT Coalesce(SUM(StoredGrades.EarnedCrHrs), 0)
+                FROM StoredGrades
+                WHERE  StoredGrades.Grade != 'F'
+                AND StoredGrades.Grade_Level IN (6, 7, 8)
+                AND StoredGrades.Credit_Type LIKE '%ALG1%'
+                AND StoredGrades.StudentID = ~(curstudid)
+                AND REGEXP_LIKE(StoredGrades.Grade, CHR(94) || '[' || CHR(94) ||'#]')
+                ;] -->
+              <tr>
+                <td colspan="2">
+                  <div class="feedback-info bold">
+                    ~[text:psx.htmlc.guardian.graduation_progress_tps.students_with_middle_school_algebra_credits_are_required_to_comp]
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td class="bold">~[text:psx.htmlc.guardian.graduation_progress_tps.middle_school_algebra_credits2]</td><td>~(StoredGrades.Grade)</td>
+              </tr>
+              <!-- [/tlist_sql] -->
+              <tr bgcolor="#f6f6f6">
+                  <td colspan="2" class="center">~[text:psx.htmlc.guardian.graduation_progress_tps.nonacademic_graduation_requirements]</td>
+              </tr>
+              <tr bgcolor="#f6f6f6">
+                <td>
+                   ~[text:psx.htmlc.guardian.graduation_progress_tps.requirement]
+                </td>
+                <td>
+                    ~[text:psx.htmlc.guardian.graduation_progress_tps.status]
+                </td>
+              </tr>
+                <tr>
+                    <td class="bold">~[text:psx.htmlc.guardian.graduation_progress_tps.fafsa_status]:</td>
+                    <td>
+                    	~(decode;~([Students.U_StudentsUserFields]TPS_GRAD_FAFSA);;Unset;Complete;Complete;Incomplete;Incomplete;Opted Out;Opted Out;Not Set)
+                    </td>
+                </tr>
+              <tr>
+                <td class="bold">
+                  ~[text:psx.htmlc.guardian.graduation_progress_tps.the_student_has_satisfactorily_completed_the_cpr_requirement1]
+                </td>
+                <td>
+                  ~(decode;~([Students.U_StudentsUserFields]TPS_GRAD_CPR);;Unset;Yes;Yes;No;No;Not Set)
+                </td>
+              </tr>
+              <tr>
+                <td class="bold">
+                  ~[text:psx.htmlc.guardian.graduation_progress_tps.the_student_has_satisfactorily_completed_the_14_modules_of_the_f1]
+                </td>
+                <td>
+                  ~(decode;~([Students.U_StudentsUserFields]TPS_GRAD_FLP);;Unset;Yes;Yes;No;No;Exempt;Exempt;Not Set)
+                </td>
+              </tr>
+              <tr>
+                <td class="bold">
+                  ~[text:psx.htmlc.guardian.graduation_progress_tps.the_student_has_satisfactorily_completed_all_icap_requirements1]
+                </td>
+                <td>
+                  ~(*powerquery;query=org.tulsaschools.tps_custom.dats.students.icap_combined)
+                  (Derived from ICAP 9th, 10th, 11th, 12th, and Work-Based Learning)
+                </td>
+              </tr>
+              <tr>
+                <td class="bold">
+                  ~[text:psx.htmlc.guardian.graduation_progress_tps.us_civics_knowledge_assessment1]
+                </td>
+                <td>
+                    ~(decode;~([Students.U_StudentsUserFields]TPS_GRAD_USCIVICS);;Unset;Yes;Yes;No;No;Exempt;Exempt;Not Set)
+                  (~[text:psx.htmlc.guardian.graduation_progress_tps.beginning_cohort_2025])
+                </td>
+              </tr>
+            </table>
+            <table id="non-academic-requirements">
+              <tr>
+                <td class="center">~[text:psx.htmlc.guardian.graduation_progress_tps.complete1] <img class="legend-img" src="/images/complete.png"></td><td class="center">~[text:psx.htmlc.guardian.graduation_progress_tps.incomplete1] <img class="legend-img" src="/images/incomplete.png"></td>
+              </tr>
+              <tr>
+                  <td>~[text:psx.htmlc.guardian.graduation_progress_tps.icap_progress1]</td><td></td>
+              </tr>
+              <tr>
+                  <td>~[text:psx.htmlc.guardian.graduation_progress_tps.non_academic_requirements_progress1]</td><td></td>
+              </tr>
+              <tr>
+                <td colspan="2">
+                  <div class="feedback-info" class="bold">
+                    <h3 class="center">~[text:psx.htmlc.guardian.graduation_progress_tps.non_academic_graduation_requirements_information]</h3>
+                    ~[text:psx.htmlc.guardian.graduation_progress_tps.icap__individual_career_academic_plan_9th__12th_grade_and_workba] <a href="https://sde.ok.gov/documents/2017-08-29/what-is-icap" target="_blank">~[text:psx.htmlc.guardian.graduation_progress_tps.ok_sde__what_is_icap]</a><br>
+                    ~[text:psx.htmlc.guardian.graduation_progress_tps.parentsguardians_can_help_monitor_icap_progress_and_explore_your] <a href="https://resources.finalsite.net/images/v1745248737/tulsaschoolsorg/h7sxirwtlhnscyr1gkvz/XelloFlyer.pdf" target="_blank">~[text:psx.htmlc.guardian.graduation_progress_tps.here]</a><br>
+                    ~[text:psx.htmlc.teachers.studentpages.gradplanprogress_tps.fafsa__free_application_for_student_aid_information_at] <a href="https://sde.ok.gov/sites/default/files/FAFSA%20FAQs%20%282%29.pdf" target="_blank">OK SDE FAFSA</a><br>
+                    ~[text:psx.htmlc.guardian.graduation_progress_tps.cpr__cardiopulmonary_resuscitation_certification_information_at] <a href="https://sde.ok.gov/health-services-resources#:~:text=Oklahoma%20law%20requires%20that%20all,least%20once%20prior%20to%20graduation." target="">~[text:psx.htmlc.guardian.graduation_progress_tps.ok_sde__cpr]</a><br>
+                    ~[text:psx.htmlc.guardian.graduation_progress_tps.pfl__financial_literacy_passport_information_at] <a href="https://sde.ok.gov/personal-financial-literacy" target="_blank">~[text:psx.htmlc.guardian.graduation_progress_tps.ok_sde__pfl].</a><br>
+                    ~[text:psx.htmlc.guardian.graduation_progress_tps.civics__us_civics_knowledge_assessment_information_at] <a href="https://sde.ok.gov/sites/default/files/documents/files/United%20States%20Naturalization%20Test%20Graduation%20Requirement%20FAQS.pdf" target="_blank">~[text:psx.htmlc.guardian.graduation_progress_tps.ok_sde__civics]</a>
+                  </div>
+                </td>
+              </tr>
+              <tr bgcolor="#f6f6f6">
+                  <td colspan="2"></td>
+              </tr>
+            </table>
+
+
+		<!-- CUSTOM ABOVE -->
+
+		<div class="box-round" ng-repeat="version in gradPlanProgressContext.progressList"/>
+			<!-- Wildcard content will close this div -->
+			~[wc:advanced_gp_progress_content]
+	</body>
+</html>

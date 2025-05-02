@@ -1,0 +1,126 @@
+<script type="text/javascript">
+  // This customization moves `<span>label: value</span>` into our `<dl>` as `<dt>label</dt><dd>value</dd>`
+
+  ;(function ($, tps_custom) {
+    function old_look($student_information_table, $student_detail_header_h2) {
+      $student_information_table.insertAfter($student_detail_header_h2);
+      $student_information_table.addClass('tps_custom--old-look');
+      $student_information_table.removeClass('tps_custom--hidden');
+    }
+
+    function new_look($student_information_table, $student_details_information) {
+      $student_details_information.html($student_information_table);
+      $student_information_table.removeClass('tps_custom--hidden');
+    }
+
+    $(function () {
+      var $student_information_table = $('#tps_custom--student-information');
+      var $student_detail_header_h2 = $('h2#student_detail_header');
+      var $student_details_information = $('#student_details_information');
+
+      function validator() {
+        var errors = [];
+        if ($student_information_table.length !== 1) {
+          errors.push('should be exactly one $student_information_table');
+        }
+        if ($student_detail_header_h2.length + $student_details_information.length !== 1) {
+          errors.push('should be exactly one $student_detail_header_h2 or $student_details_information');
+        }
+        return errors;
+      }
+
+      if (!tps_custom || !tps_custom.load(validator, 'Adding student information header')) {
+        return;
+      }
+
+      if ($student_details_information.length) {
+        return new_look($student_information_table, $student_details_information);
+      }
+
+      if ($student_detail_header_h2.length) {
+        return old_look($student_information_table, $student_detail_header_h2);
+      }
+    });
+  })($j, window.tps_custom);
+</script>
+
+<style>
+  /* Ensure our <dl> is below the existing details */
+  #student_details_information {
+    flex-wrap: wrap;
+  }
+
+  #tps_custom--student-information {
+    margin: inherit;
+  }
+
+  #tps_custom--student-information.tps_custom--old-look {
+    margin: 0 20px;
+  }
+  #tps_custom--student-information td {
+    display: inline-table;
+    font-size: 14px;
+    margin-right: 5px !important;
+    white-space: nowrap;
+  }
+  #tps_custom--student-information td {
+    color: #000;
+  }
+  td.header-label {
+    font-weight: bold;
+  }
+  td.header-label:after {
+    content: ':';
+  }
+  #tps_custom--student-information td {
+    border: none;
+    margin: 0;
+    padding-left: 0.25em;
+    padding-right: 0.5em;
+  }
+  #tps_custom--student-information td a {
+    margin: 0;
+  }
+</style>
+
+<table id="tps_custom--student-information" class="tps_custom--hidden">
+  <tr>
+    <td class="header-label">Student Number</td><td class="header-content">~([01]Student_Number)</td>
+    <td class="header-label">State ID</td><td class="header-content">~([01]State_StudentNumber)</td>
+    ~[if#cbg.~(grade_level)>8]
+    <td class="header-label">Cohort</td><td class="header-content">~([01]Sched_YearOfGraduation)</td>
+    <td class="header-label">Credit Based Grade</td><td class="header-content">~([Students.U_StudentsUserFields]TPS_Credit_Based_Grade_Level)</td>
+    [/if#cbg]
+    <td class="header-label">Grade</td><td class="header-content">~(grade_level)</td>
+    <td class="header-label">DOB</td><td class="header-content">~(DOB)</td>
+    <td class="header-label">Age</td><td class="header-content">~(age)</td>
+    <td class="header-label">Name</td><td class="header-content">~([01]LastFirst)</td>
+  </tr>
+  <tr>
+    <!-- ~[tlist_sql;
+    WITH school AS (SELECT Name, TO_CHAR(School_Number) code FROM Schools UNION SELECT 'Out of District', 'OOD' FROM dual)
+    SELECT school.Name, school.code FROM U_StudentsUserFields LEFT JOIN school ON school.code = U_StudentsUserFields.TPS_Demographics_Home_Sch
+    JOIN Students S ON s.DCID = U_StudentsUserFields.StudentsDCID WHERE U_StudentsUserFields.StudentsDCID = ~(studentrn)] -->
+    <td class="header-label">Home School</td><td class="header-content">~(name)  (~(school_number))</td>
+    <!-- [/tlist_sql] -->
+    <!-- ~[tlist_sql; SELECT Name, School_Number FROM Schools WHERE School_Number = ~([01]Enrollment_SchoolID) ] -->
+    <td class="header-label">School of Enrollment</td><td class="header-content">~(Name) (~(School_Number))</td>
+    <!-- [/tlist_sql] -->
+    <td class="header-label">Transfer</td><td class="header-content">~([01]TPS_Transfer_Code)</td>
+    <td class="header-label">Quadrant</td><td class="header-content">~([01]TPS_TRANSFER_QUADRANT)</td>
+    <!-- ~[tlist_sql; SELECT U_STUDENTSUSERFIELDS.TPS_DEMOGRAPHICS_PREFERREDFI01 FROM U_STUDENTSUSERFIELDS WHERE U_STUDENTSUSERFIELDS.StudentsDCID = ~(studentrn) ] -->
+      <td class="header-label">Preferred First Name</td><td class="header-content">~(preferred_first_Name)</td>
+    <!-- [/tlist_sql] -->
+    <td class="header-label">Gender</td><td class="header-content">~([01]gender)</td>
+    <td class="header-label">Ethnicity</td><td class="header-content">~([01]ethnicity)</td>
+    <td class="header-label">IDEA</td><td class="header-content"><a href="/admin/students/studentpages/SPED.html?frn=~(studentfrn)">~([01]OK_IDEA)</a></td>
+    <td class="header-label">ELL</td><td class="header-content">~(decode;~([01]OK_ELL);1633;No;1634;No;1636;No;2349;Yes;9997;No;;)</td>
+    <td class="header-label">GT</td><td class="header-content">~([01]ok_gifted)</td>
+    <td class="header-label">Section 504</td><td class="header-content">~([Students.S_OK_STU_X]Section504)</td>
+    <td class="header-label">MAP Reading Score</td><td class="header-content">~([01]MAP_READING_SCORE) <small>(~([01]MAP_READING_PERCENTILE)%)</small> ~([01]MAP_READING_DATE)</td>
+    <td class="header-label">Map Math Score</td><td class="header-content">~([01]MAP_MATHEMATICS_SCORE) <small>(~([01]MAP_MATHEMATICS_PERCENTILE)%)</small> ~([01]MAP_MATHEMATICS_DATE)</td>
+    <td class="header-label">Enroll Status</td><td class="header-content">~(decode;~([01]Enroll_Status);-1;Pre-enroll;0;Active;1;Inactive;2;Inactive;;;;)</td>
+    <td class="header-label">Family Rep</td><td class="header-content">~([01]FAMILY_REP)</td>
+    <td class="header-label">Economic Disadvantage</td><td class="header-content">~(decode;~([Students.S_STU_X]EconomicDisadvantage);Y;YES;N;NO;;)</td>
+  </tr>
+</table>
