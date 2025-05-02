@@ -1,6 +1,7 @@
+-- Looking forward to using variations of this for multiple projects
 WITH
 student AS (
-    SELECT * FROM Students WHERE ID = 856136
+    SELECT * FROM Students WHERE ID = :studentid
 ),
 
 -- split stored grade credit type into separate rows (for easier joining)
